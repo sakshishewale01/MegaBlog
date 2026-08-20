@@ -1,29 +1,35 @@
-import Container from "./container/Container";
+import Container from "../components/container/Container.jsx";
 
-import Footer from "./Footer/Footer";
+import Footer from "./Footer/Footer.jsx";
 
-import Header from "./Header/Header";
+import Header from "./Header/Header.jsx";
 
-import Button from "./Button";
+import AuthLayout from "./AuthLayout.jsx";
 
-import Input from "./input";
+import Button from "./Button.jsx";
 
-import Logo from "./logo";
+import Input from "./input.jsx";
 
-import RTE from "./RTE";
+import Logo from "./logo.jsx";
 
-import PostForm from "./PostForm";
+import PostCard from "./PostCard.jsx";
 
-import Select from "./Select";
+import PostForm from "./post-form/PostForm.jsx";
+
+import RTE from "./RTE.jsx";
+
+import Select from "./Select.jsx";
 
 export {
     Container,
     Footer,
     Header,
+    AuthLayout,
     Button,
     Input,
     Logo,
-    RTE,
+    PostCard,
     PostForm,
+    RTE,
     Select,
 };

@@ -1,33 +1,39 @@
+import {
+    Client,
+    TablesDB,
+    Storage,
+    Query,
+    ID,
+} from "appwrite";
+
 import conf from "../conf/conf.js";
-import { Client, TablesDB, Storage, Query, ID } from "appwrite";
 
-export class Service {
-    client = new Client();
-    tablesDB;
-    bucket;
-
+class AppwriteService {
     constructor() {
+        this.client = new Client();
+
         this.client
             .setEndpoint(conf.appwriteUrl)
             .setProject(conf.appwriteProjectId);
 
         this.tablesDB = new TablesDB(this.client);
-        this.bucket = new Storage(this.client);
+        this.storage = new Storage(this.client);
     }
 
     // =========================
-    // POST SERVICES
+    // CREATE POST
     // =========================
 
     async createPost({
         title,
-        slug,
         content,
         featuredImage,
         status,
-        userId
+        userId,
     }) {
         try {
+            const slug = this.createSlug(title);
+
             return await this.tablesDB.createRow({
                 databaseId: conf.appwriteDatabaseId,
                 tableId: conf.appwriteTableId,
@@ -37,16 +43,18 @@ export class Service {
                     content,
                     featuredImage,
                     status,
-                    userId
-                }
+                    userId,
+                },
             });
         } catch (error) {
-            console.log(
-                "Appwrite service :: createPost :: error",
-                error
-            );
+            console.error("createPost:", error);
+            throw error;
         }
     }
+
+    // =========================
+    // UPDATE POST
+    // =========================
 
     async updatePost(
         slug,
@@ -54,7 +62,7 @@ export class Service {
             title,
             content,
             featuredImage,
-            status
+            status,
         }
     ) {
         try {
@@ -66,119 +74,157 @@ export class Service {
                     title,
                     content,
                     featuredImage,
-                    status
-                }
+                    status,
+                },
             });
         } catch (error) {
-            console.log(
-                "Appwrite service :: updatePost :: error",
-                error
-            );
+            console.error("updatePost:", error);
+            throw error;
         }
     }
+
+    // =========================
+    // DELETE POST
+    // =========================
 
     async deletePost(slug) {
         try {
             await this.tablesDB.deleteRow({
                 databaseId: conf.appwriteDatabaseId,
                 tableId: conf.appwriteTableId,
-                rowId: slug
+                rowId: slug,
             });
 
             return true;
         } catch (error) {
-            console.log(
-                "Appwrite service :: deletePost :: error",
-                error
-            );
-
+            console.error("deletePost:", error);
             return false;
         }
     }
+
+    // =========================
+    // GET SINGLE POST
+    // =========================
 
     async getPost(slug) {
         try {
             return await this.tablesDB.getRow({
                 databaseId: conf.appwriteDatabaseId,
                 tableId: conf.appwriteTableId,
-                rowId: slug
+                rowId: slug,
             });
         } catch (error) {
-            console.log(
-                "Appwrite service :: getPost :: error",
-                error
-            );
-
-            return false;
+            console.error("getPost:", error);
+            return null;
         }
     }
 
-    async getPosts(
-        queries = [Query.equal("status", "active")]
-    ) {
+    // =========================
+    // GET ALL POSTS
+    // =========================
+
+    async getPosts(queries = []) {
+        try {
+            const finalQueries = [
+                Query.equal("status", "active"),
+                Query.orderDesc("$createdAt"),
+                ...queries,
+            ];
+
+            return await this.tablesDB.listRows({
+                databaseId: conf.appwriteDatabaseId,
+                tableId: conf.appwriteTableId,
+                queries: finalQueries,
+            });
+        } catch (error) {
+            console.error("getPosts:", error);
+            return null;
+        }
+    }
+
+    // =========================
+    // GET USER POSTS
+    // =========================
+
+    async getUserPosts(userId) {
         try {
             return await this.tablesDB.listRows({
                 databaseId: conf.appwriteDatabaseId,
                 tableId: conf.appwriteTableId,
-                queries
+                queries: [
+                    Query.equal("userId", userId),
+                    Query.orderDesc("$createdAt"),
+                ],
             });
         } catch (error) {
-            console.log(
-                "Appwrite service :: getPosts :: error",
-                error
-            );
-
-            return false;
+            console.error("getUserPosts:", error);
+            return null;
         }
     }
 
     // =========================
-    // FILE SERVICES
+    // IMAGE UPLOAD
     // =========================
 
     async uploadFile(file) {
         try {
-            return await this.bucket.createFile({
+            return await this.storage.createFile({
                 bucketId: conf.appwriteBucketId,
                 fileId: ID.unique(),
-                file
+                file,
             });
         } catch (error) {
-            console.log(
-                "Appwrite service :: uploadFile :: error",
-                error
-            );
-
-            return false;
+            console.error("uploadFile:", error);
+            return null;
         }
     }
 
+    // =========================
+    // DELETE IMAGE
+    // =========================
+
     async deleteFile(fileId) {
         try {
-            await this.bucket.deleteFile({
+            await this.storage.deleteFile({
                 bucketId: conf.appwriteBucketId,
-                fileId
+                fileId,
             });
 
             return true;
         } catch (error) {
-            console.log(
-                "Appwrite service :: deleteFile :: error",
-                error
-            );
-
+            console.error("deleteFile:", error);
             return false;
         }
     }
 
+    // =========================
+    // IMAGE PREVIEW
+    // =========================
+
     getFilePreview(fileId) {
-        return this.bucket.getFilePreview({
+        if (!fileId) return "";
+
+        return this.storage.getFilePreview({
             bucketId: conf.appwriteBucketId,
-            fileId
+            fileId,
         });
+    }
+
+    // =========================
+    // CREATE SLUG
+    // =========================
+
+    createSlug(title) {
+        return title
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .slice(0, 36);
     }
 }
 
-const service = new Service();
+const appwriteService = new AppwriteService();
 
-export default service;
+export default appwriteService;

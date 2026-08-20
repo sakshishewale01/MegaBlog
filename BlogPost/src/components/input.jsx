@@ -1,25 +1,50 @@
 function Input({
-  label,
-  type = "text",
-  className = "",
-  ...props
+    label,
+    type = "text",
+    className = "",
+    error = "",
+    ...props
 }) {
-  return (
-    <div className="w-full">
-      {label && (
-        <label className="block mb-2 text-sm font-medium text-gray-700">
-          {label}
-        </label>
-      )}
+    return (
+        <div className="w-full">
+            {label && (
+                <label className="block mb-2 text-sm font-semibold text-slate-700">
+                    {label}
+                </label>
+            )}
 
-      <input
-        type={type}
-        className={`w-full px-3 py-2 border border-gray-300 rounded-lg 
-        focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
-        {...props}
-      />
-    </div>
-  );
+            <input
+                type={type}
+                className={`
+                    w-full
+                    px-4 py-3
+                    rounded-xl
+                    border
+                    bg-white
+                    text-slate-900
+                    placeholder:text-slate-400
+                    outline-none
+                    transition
+                    focus:ring-4
+                    focus:ring-indigo-100
+                    focus:border-indigo-500
+                    ${
+                        error
+                            ? "border-red-400"
+                            : "border-slate-200"
+                    }
+                    ${className}
+                `}
+                {...props}
+            />
+
+            {error && (
+                <p className="mt-1 text-sm text-red-500">
+                    {error}
+                </p>
+            )}
+        </div>
+    );
 }
 
 export default Input;

@@ -1,105 +1,151 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+    Link,
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
 import { useDispatch } from "react-redux";
 
-import authService from "../../appwrite/auth";
-import { login } from "../../store/authSlice";
+import authService from "../appwrite/auth.js";
+import { login } from "../store/authSlice.js";
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useDispatch();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
+
         setError("");
+        setLoading(true);
 
         try {
-            const session = await authService.login({
+            await authService.login({
                 email,
                 password,
             });
 
-            if (session) {
-                const userData = await authService.getCurrentUser();
+            const userData =
+                await authService.getCurrentUser();
 
-                if (userData) {
-                    dispatch(login({ userData }));
-                    navigate("/");
-                }
+            if (userData) {
+                dispatch(
+                    login({
+                        userData,
+                    })
+                );
+
+                navigate(
+                    location.state?.from || "/",
+                    {
+                        replace: true,
+                    }
+                );
             }
-        } catch (error) {
-            console.log("Login error:", error);
-            setError(error.message || "Login failed");
+        } catch (err) {
+            setError(
+                err.message ||
+                    "Invalid email or password."
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-center py-10">
-            <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-                
-                <h2 className="text-2xl font-bold text-center mb-6">
-                    Login
-                </h2>
+        <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
 
-                {error && (
-                    <p className="text-red-500 text-center mb-4">
-                        {error}
+            <div className="w-full max-w-md">
+
+                <div className="text-center mb-8">
+                    <h1 className="text-4xl font-black text-slate-900">
+                        Welcome back
+                    </h1>
+
+                    <p className="mt-2 text-slate-500">
+                        Login to continue to MegaBlog.
                     </p>
-                )}
+                </div>
 
-                <form onSubmit={handleLogin}>
+                <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
 
-                    <div className="mb-4">
-                        <label className="block mb-2">
-                            Email
-                        </label>
+                    {error && (
+                        <div className="mb-5 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-600">
+                            {error}
+                        </div>
+                    )}
 
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full border p-3 rounded"
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block mb-2">
-                            Password
-                        </label>
-
-                        <input
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full border p-3 rounded"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-3 rounded"
+                    <form
+                        onSubmit={handleLogin}
+                        className="space-y-5"
                     >
-                        Login
-                    </button>
-                </form>
+                        <div>
+                            <label className="block mb-2 text-sm font-semibold">
+                                Email
+                            </label>
 
-                <p className="text-center mt-6">
-                    Don't have an account?{" "}
-                    <Link
-                        to="/signup"
-                        className="text-blue-600"
-                    >
-                        Signup
-                    </Link>
-                </p>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) =>
+                                    setEmail(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="you@example.com"
+                                required
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block mb-2 text-sm font-semibold">
+                                Password
+                            </label>
+
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) =>
+                                    setPassword(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="Enter your password"
+                                required
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 disabled:opacity-50 transition"
+                        >
+                            {loading
+                                ? "Logging in..."
+                                : "Login"}
+                        </button>
+                    </form>
+
+                    <p className="text-center mt-6 text-sm text-slate-500">
+                        Don't have an account?{" "}
+
+                        <Link
+                            to="/signup"
+                            className="font-semibold text-indigo-600 hover:underline"
+                        >
+                            Create one
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

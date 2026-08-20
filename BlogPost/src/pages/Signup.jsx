@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
-import authService from "../../appwrite/auth";
-import { login } from "../../store/authSlice";
+import authService from "../appwrite/auth";
+import { login } from "../store/authSlice";
 
 function Signup() {
     const navigate = useNavigate();
